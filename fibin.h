@@ -1,6 +1,11 @@
 #ifndef JNP1_4_FIBIN_H
 #define JNP1_4_FIBIN_H
 
+#include <iostream>
+#include <type_traits>
+
+using namespace std;
+
 template <int N>
 class Fib {
 public:
@@ -78,6 +83,24 @@ class Eq {
 public:
     constexpr static bool value() {
         return T1::value() == T2::value();
+    }
+};
+
+template <class ValueType, class Enabled = void>
+class Fibin {
+public:
+    template <class T>
+    constexpr static void eval() {
+        cout << "Fibin doesn't support: PKc" << endl;
+    }
+};
+
+template <class ValueType>
+class Fibin<ValueType, typename enable_if<is_integral_v<ValueType>>::type> {
+public:
+    template <class T>
+    constexpr static ValueType eval() {
+        return (ValueType) T::value();
     }
 };
 

@@ -14,5 +14,7 @@ cout << Inc1<Fib<19>>::value() << endl;
 cout << Inc1<Lit<False>>::value() << endl;
 cout << Inc10<Inc1<Lit<False>>>::value() << endl;
 cout << Eq<Lit<Fib<0>>, Lit<Fib<1>>>::value() << endl;
+cout << Fibin<int>::eval<Inc10<Inc1<Lit<Fib<10>>>>>() << endl;
+Fibin<const char*>::eval<Inc1<Lit<Fib<10>>>>();
 
 }
