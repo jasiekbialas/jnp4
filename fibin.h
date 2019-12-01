@@ -5,24 +5,25 @@ template <int N>
 class Fib {
 public:
     constexpr static unsigned long long value() {
-        return Fib<N - 1>::value() + Fib<N - 2>::value();
+        static_assert(N >= 0);
+        if (N == 0) {
+            return 0;
+        } else if (N == 1) {
+            return 1;
+        } else {
+            unsigned long long first = 0;
+            unsigned long long second = 1;
+            unsigned long long result = 1;
+
+            for (int i = 0; i < N - 1; i++) {
+                result = first + second;
+                first = second;
+                second = result;
+            }
+
+            return result;
+        }
     };
-};
-
-template <>
-class Fib<0> {
-public:
-    constexpr static unsigned long long value() {
-        return 0;
-    }
-};
-
-template <>
-class Fib<1> {
-public:
-    constexpr static unsigned long long value() {
-        return 1;
-    }
 };
 
 class True {};
