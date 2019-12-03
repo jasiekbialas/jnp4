@@ -59,7 +59,7 @@ struct Eq;
 template<typename VT, typename T, typename ...R>
 struct Expr;
 
-constexpr static int hash_char(const char c) {
+/*constexpr static int hash_char(const char c) {
     char x = c;
     if (x >= 'A' && x <= 'Z') {
         x -= 'A' + 1;
@@ -69,26 +69,26 @@ constexpr static int hash_char(const char c) {
         x -= '0';
         x += ('z' - 'a') + 1;
     } else {
-        x = 0;
+        x = -1;
     }
 
     return x;
 }
 
-constexpr static unsigned long long hash_str(const char *str) {
+constexpr static int Var(const char *str) {
     int result = 0;
     char c = ' ';
 
     for (int i = 0; str[i] != '\0'; i++) {
         c = hash_char(str[i]);
         if (c == -1 || i >= max_id_len) {
-            return 0;
+            return -1;
         }
         result += hash_char(str[i]) * pow(hash_const, i);
     }
 
     return result;
-}
+}*/
 
 template<typename VT, typename A, int n, typename B, typename ...R>
 struct Expr<VT, Invoke<Lambda<Var<n>, A>, B> ,R...> {
