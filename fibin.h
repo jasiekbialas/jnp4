@@ -7,6 +7,9 @@
 
 using namespace std;
 
+struct True;
+struct False;
+
 template<int N>
 struct Fib;
 
@@ -34,77 +37,103 @@ struct Inc1;
 template <typename T>
 struct Inc10;
 
-template<typename VT, typename T>
+template <typename A, typename B>
+struct Lambda;
+
+template <typename A, typename B>
+struct Invoke;
+
+template<typename A, typename B, typename C>
+struct If;
+
+template<bool b, typename B, typename C>
+struct Choose;
+
+template<typename A, typename B>
+struct Eq;
+
+template<typename VT, typename T, typename ...R>
 struct Expr;
 
-template<typename VT, typename A, typename B, typename C>
-struct VExpr;
-
-template<typename VT, typename T, int n, typename V>
-struct Expr<VT, Let<Var<n>,  T, V>> {
-    constexpr static VT val = VExpr<VT, Var<n>, T, V>::val;
+template<typename VT, typename A, int n, typename B, typename ...R>
+struct Expr<VT, Invoke<Lambda<Var<n>, A>, B> ,R...> {
+    constexpr static VT val = Expr<VT, A, Var<n>, B, R...>::val;
 };
 
+template<typename VT, typename B, typename C, typename ...R>
+struct Expr<VT, Choose<true, B, C>, R...> {
+    constexpr static VT val = Expr<VT, B, R...>::val;
+};
 
-template<typename VT, typename T, int n>
-struct VExpr <VT, Var<n>, T, Ref<Var<n>> >{
+template<typename VT, typename B, typename C, typename ...R>
+struct Expr<VT, Choose<false, B, C>, R...> {
+    constexpr static VT val = Expr<VT, C, R...>::val;
+};
+
+template<typename VT, typename A, typename B, typename C, typename ...R>
+struct Expr<VT, If<A, B, C>, R...> {
+    constexpr static VT val = Expr<VT, Choose<Expr<VT, A, R...>::val, B, C>, R...>::val;
+};
+
+template<typename VT, typename A, typename B, typename ...R>
+struct Expr<VT, Eq<A, B>, R...>{
+    constexpr static bool val = Expr<VT, A, R...>::val == Expr<VT, B, R...>::val;
+};
+
+template<typename VT, typename T, int n, typename V, typename ...R>
+struct Expr<VT, Let<Var<n>,  T, V>, R...> {
+    constexpr static VT val = Expr<VT, V, Var<n>, T, R...>::val;
+};
+
+template<typename VT, typename T, int n, typename ...R>
+struct Expr <VT, Ref<Var<n>>, Var<n>, T, R... >{
     constexpr static VT val = Expr<VT, T>::val;
 };
 
-template<typename VT, typename T, int n, typename ... V>
-struct VExpr <VT, Var<n>,  T, Sum <V...> >{
-    constexpr static VT val = (VExpr<VT, Var<n>, T, V>::val + ...);
+template <typename VT, typename ...R>
+struct Expr<VT, Lit<True>, R...> {
+    constexpr static bool val = true;
 };
 
-template<typename VT, typename T, typename V, int n>
-struct VExpr <VT, V, T, Lit<Fib<n>> >{
-    constexpr static VT val = Expr<VT, Lit<Fib<n>>>::val;
+template <typename VT, typename ...R>
+struct Expr<VT, Lit<False>, R...> {
+    constexpr static bool val = false;
 };
 
-template<typename VT, typename T, int n, typename V>
-struct VExpr <VT, Var<n>, T, Inc1<V> >{
-    constexpr static VT val = VExpr<VT, Var<n>, T, V>::val + Expr<VT, Lit<Fib<1>>>::val;
-};
-
-template<typename VT, typename T, int n, typename V>
-struct VExpr <VT, Var<n>, T, Inc10<V> >{
-    constexpr static VT val = VExpr<VT, Var<n>, T, V>::val + Expr<VT, Lit<Fib<10>>>::val;
-};
-
-template<typename VT>
-struct Expr<VT, Lit<Fib<1>>> {
+template<typename VT, typename ...R>
+struct Expr<VT, Lit<Fib<1>>, R...> {
     constexpr static VT val = 1;
 };
 
-template<typename VT>
-struct Expr<VT, Lit<Fib<2>>> {
+template<typename VT, typename ...R>
+struct Expr<VT, Lit<Fib<2>>, R...> {
     constexpr static VT val = 1;
 };
 
-template<typename VT, int n>
-struct Expr<VT, Lit<Fib<n>>> {
+template<typename VT, int n, typename ...R>
+struct Expr<VT, Lit<Fib<n>>, R...> {
     constexpr static VT val =
             Expr<VT, Lit<Fib<n-1>>>::val +
             Expr<VT, Lit<Fib<n-2>>>::val;
 };
 
-template<typename VT, typename ... T>
-struct Expr<VT, Sum<T...>>{
-    constexpr static VT val = (Expr<VT, T>::val + ...);
+template<typename VT, typename ... T, typename ...R>
+struct Expr<VT, Sum<T...>, R...>{
+    constexpr static VT val = (Expr<VT, T, R...>::val + ...);
 };
 
-template<typename VT, typename T>
-struct Expr<VT, Inc1<T>>{
-    constexpr static VT val = Expr<VT, T>::val + Expr<VT, Lit<Fib<1>>>::val;
+template<typename VT, typename T, typename  ...R>
+struct Expr<VT, Inc1<T>, R...>{
+    constexpr static VT val = Expr<VT, T, R...>::val + Expr<VT, Lit<Fib<1>> >::val;
 };
 
-template<typename VT, typename T>
-struct Expr<VT, Inc10<T>>{
-    constexpr static VT val = Expr<VT, T>::val + Expr<VT, Lit<Fib<10>>>::val;
+template<typename VT, typename T, typename ...R>
+struct Expr<VT, Inc10<T>, R...>{
+    constexpr static VT val = Expr<VT, T, R...>::val + Expr<VT, Lit<Fib<10>>>::val;
 };
 
 template <class VT>
-struct Fibo {
+struct Fibin {
     template <typename T>
     constexpr static VT eval() {
         return  Expr<VT, T>::val;
