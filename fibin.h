@@ -3,105 +3,92 @@
 
 #include <iostream>
 #include <type_traits>
+#include <typeinfo>
 
 using namespace std;
 
-template <int N>
-class Fib {
-public:
-    constexpr static unsigned long long value() {
-        static_assert(N >= 0);
-        if (N == 0) {
-            return 0;
-        } else if (N == 1) {
-            return 1;
-        } else {
-            unsigned long long first = 0;
-            unsigned long long second = 1;
-            unsigned long long result = 1;
+template<int N>
+struct Fib;
 
-            for (int i = 0; i < N - 1; i++) {
-                result = first + second;
-                first = second;
-                second = result;
-            }
+template <typename T>
+struct Lit;
 
-            return result;
-        }
-    };
+template<typename ... Args>
+struct Sum;
+
+template <typename Var, typename Val, typename Ex>
+struct Let;
+
+template <char*>
+struct Var;
+
+template <typename T>
+struct Ref;
+
+template <char* C>
+struct Ref<Var<C>>;
+
+template<typename VT, typename T>
+struct Expr;
+
+template<typename VT, typename A, typename B, typename C>
+struct VExpr;
+
+template<typename VT, typename T, char* C, typename V>
+struct Expr<VT, Let<Var<C>, Expr<VT, T>, V>> {
+    constexpr static VT val = Expr<VT, T>::val;
 };
 
-class True {};
+template<typename VT, typename T, char* C>
+struct VExpr <VT, Var<C>, Expr<VT, T>, Ref<Var<C>> >{
+    constexpr static VT val = Expr<VT, T>::val;
+};
 
-class False {};
+template<typename VT, typename T, char* C, typename ... V>
+struct VExpr <VT, Var<C>, Expr<VT, T>, Sum <V...> >{
+    constexpr static VT val = (VExpr<VT, Var<C>, Expr<VT, T>,V>::val + ...);
+};
 
-template <class T>
-class Lit;
+template<typename VT, typename T, char* C, int n>
+struct VExpr <VT, Var<C>, Expr<VT, T>, Lit<Fib<n>> >{
+    constexpr static VT val = Expr<VT, Lit<Fib<n>>>::val;
+};
 
-template <int n>
-class Lit<Fib<n>> {
-public:
-    constexpr static unsigned long long value() {
-        return Fib<n>::value();
+template<typename VT>
+struct Expr<VT, Lit<Fib<1>>> {
+    constexpr static VT val = 1;
+};
+
+template<typename VT>
+struct Expr<VT, Lit<Fib<2>>> {
+    constexpr static VT val = 1;
+};
+
+template<typename VT, int n>
+struct Expr<VT, Lit<Fib<n>>> {
+    constexpr static VT val =
+            Expr<VT, Lit<Fib<n-1>>>::val +
+            Expr<VT, Lit<Fib<n-2>>>::val;
+};
+
+template<typename VT, typename ... T>
+struct Expr<VT, Sum<T...>>{
+    constexpr static VT val = (Expr<VT, T>::val + ...);
+};
+
+//template<typename VT, char* C, typename V, typename ... T>
+//struct Expr<VT, Var<C>, Expr<VT, V>, Sum<T...>>{
+//    constexpr static VT val = (Expr<VT, T>::val + ...);
+//};
+
+
+template <class VT>
+struct Fibo {
+    template <typename T>
+    constexpr static VT eval() {
+        return  Expr<VT, T>::val;
     }
 };
 
-template <>
-class Lit<True> {
-public:
-    constexpr static bool value() {
-        return true;
-    }
-};
-
-template <>
-class Lit<False> {
-public:
-    constexpr static bool value() {
-        return false;
-    }
-};
-
-template <class T>
-class Inc1 {
-public:
-    constexpr static unsigned long long value() {
-        return T::value() + Fib<1>::value();
-    }
-};
-
-template <class T>
-class Inc10 {
-public:
-    constexpr static unsigned long long value() {
-        return T::value() + Fib<10>::value();
-    }
-};
-
-template <class T1, class T2>
-class Eq {
-public:
-    constexpr static bool value() {
-        return T1::value() == T2::value();
-    }
-};
-
-template <class ValueType, class Enabled = void>
-class Fibin {
-public:
-    template <class T>
-    constexpr static void eval() {
-        cout << "Fibin doesn't support: PKc" << endl;
-    }
-};
-
-template <class ValueType>
-class Fibin<ValueType, typename enable_if<is_integral_v<ValueType>>::type> {
-public:
-    template <class T>
-    constexpr static ValueType eval() {
-        return (ValueType) T::value();
-    }
-};
 
 #endif /* JNP1_4_FIBIN_H */
