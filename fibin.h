@@ -134,7 +134,12 @@ struct Expr<VT, Inc10<T>, R...>{
 
 template <class VT>
 struct Fibin {
-    template <typename T>
+    template <typename T, typename U = VT, typename enable_if<!is_integral<U>::value, int>::type = 0>
+    constexpr static void eval() {
+        cout << "Fibin doesn't support: " << typeid(VT).name() << endl;
+    }
+
+    template <typename T, typename U = VT, typename enable_if<is_integral<U>::value, int>::type = 0>
     constexpr static VT eval() {
         return  Expr<VT, T>::val;
     }
