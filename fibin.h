@@ -16,31 +16,31 @@ struct False;
 template<int N>
 struct Fib;
 
-template <typename T>
+template<typename T>
 struct Lit;
 
 template<typename ... Args>
 struct Sum;
 
-template <int N, typename Value, typename Expresion>
+template<int N, typename Value, typename Expresion>
 struct Let;
 
-template <int N>
+template<int N>
 struct Id;
 
-template <int N>
+template<int N>
 struct Ref;
 
-template <typename T>
+template<typename T>
 struct Inc1;
 
-template <typename T>
+template<typename T>
 struct Inc10;
 
-template <int N, typename Body>
+template<int N, typename Body>
 struct Lambda;
 
-template <typename Function, typename Parameter>
+template<typename Function, typename Parameter>
 struct Invoke;
 
 template<typename Condition, typename Expression_1, typename Expression_2>
@@ -55,7 +55,7 @@ struct Eq;
 template<typename ValueType, typename Expression, typename ...Env>
 struct Expr;
 
-template <int N, typename ...Env>
+template<int N, typename ...Env>
 struct FindInEnv;
 
 template<int N, typename Value, typename ...Env>
@@ -63,7 +63,7 @@ struct FindInEnv<N, Id<N>, Value, Env...> {
     using found = Value;
 };
 
-template<int N, int M,  typename Value, typename ...Env>
+template<int N, int M, typename Value, typename ...Env>
 struct FindInEnv<N, Id<M>, Value, Env...> {
     using found = typename FindInEnv<N, Env...>::found;
 };
@@ -75,7 +75,7 @@ struct Expr<ValueType, Invoke<Ref<N>, Value>, Env...> {
 };
 
 template<typename ValueType, int N, typename Body, typename Value, typename ...Env>
-struct Expr<ValueType, Invoke<Lambda<N, Body>, Value> ,Env...> {
+struct Expr<ValueType, Invoke<Lambda<N, Body>, Value>, Env...> {
     constexpr static ValueType val = Expr<ValueType, Body, Id<N>, Value, Env...>::val;
 };
 
@@ -84,8 +84,8 @@ struct Expr<ValueType, Choose<true, Expression, Dismiss>, Env...> {
     constexpr static ValueType val = Expr<ValueType, Expression, Env...>::val;
 };
 
-template<typename ValueType, typename Dissmis, typename Expression, typename ...Env>
-struct Expr<ValueType, Choose<false, Dissmis, Expression>, Env...> {
+template<typename ValueType, typename Dismiss, typename Expression, typename ...Env>
+struct Expr<ValueType, Choose<false, Dismiss, Expression>, Env...> {
     constexpr static ValueType val = Expr<ValueType, Expression, Env...>::val;
 };
 
@@ -95,8 +95,9 @@ struct Expr<ValueType, If<Condition, Expression_1, Expression_2>, Env...> {
 };
 
 template<typename ValueType, typename Expr_1, typename Expr_2, typename ...Env>
-struct Expr<ValueType, Eq<Expr_1, Expr_2>, Env...>{
-    constexpr static bool val = Expr<ValueType, Expr_1, Env...>::val == Expr<ValueType, Expr_2, Env...>::val;
+struct Expr<ValueType, Eq<Expr_1, Expr_2>, Env...> {
+    constexpr static bool val = Expr<ValueType, Expr_1, Env...>::val ==
+                                Expr<ValueType, Expr_2, Env...>::val;
 };
 
 template<typename ValueType, typename Value, int N, typename Expression, typename ...Env>
@@ -105,18 +106,17 @@ struct Expr<ValueType, Let<N, Value, Expression>, Env...> {
 };
 
 template<typename ValueType, int N, typename ...Env>
-struct Expr <ValueType, Ref<N>, Env... >{
-
+struct Expr<ValueType, Ref<N>, Env...> {
     using expr = typename FindInEnv<N, Env...>::found;
     constexpr static ValueType val = Expr<ValueType, expr, Env...>::val;
 };
 
-template <typename ValueType, typename ...Env>
+template<typename ValueType, typename ...Env>
 struct Expr<ValueType, Lit<True>, Env...> {
     constexpr static bool val = true;
 };
 
-template <typename ValueType, typename ...Env>
+template<typename ValueType, typename ...Env>
 struct Expr<ValueType, Lit<False>, Env...> {
     constexpr static bool val = false;
 };
@@ -131,40 +131,40 @@ struct Expr<ValueType, Lit<Fib<1>>, Env...> {
     constexpr static ValueType val = 1;
 };
 
-template<typename ValueType, int n, typename ...Env>
-struct Expr<ValueType, Lit<Fib<n>>, Env...> {
+template<typename ValueType, int N, typename ...Env>
+struct Expr<ValueType, Lit<Fib<N>>, Env...> {
     constexpr static ValueType val =
-            Expr<ValueType, Lit<Fib<n-1>>>::val +
-            Expr<ValueType, Lit<Fib<n-2>>>::val;
+            Expr<ValueType, Lit<Fib<N - 1>>>::val +
+            Expr<ValueType, Lit<Fib<N - 2>>>::val;
 };
 
 template<typename ValueType, typename ... T, typename ...Env>
-struct Expr<ValueType, Sum<T...>, Env...>{
+struct Expr<ValueType, Sum<T...>, Env...> {
     constexpr static ValueType val = (Expr<ValueType, T, Env...>::val + ...);
 };
 
 template<typename ValueType, typename T, typename  ...Env>
-struct Expr<ValueType, Inc1<T>, Env...>{
-    constexpr static ValueType val = Expr<ValueType, T, Env...>::val + Expr<ValueType, Lit<Fib<1>> >::val;
+struct Expr<ValueType, Inc1<T>, Env...> {
+    constexpr static ValueType val =
+            Expr<ValueType, T, Env...>::val + Expr<ValueType, Lit<Fib<1>>>::val;
 };
 
 template<typename ValueType, typename T, typename ...Env>
-struct Expr<ValueType, Inc10<T>, Env...>{
-    constexpr static ValueType val = Expr<ValueType, T, Env...>::val + Expr<ValueType, Lit<Fib<10>>>::val;
+struct Expr<ValueType, Inc10<T>, Env...> {
+    constexpr static ValueType val = Expr<ValueType, T, Env...>::val +
+                                     Expr<ValueType, Lit<Fib<10>>>::val;
 };
 
-template <class ValueType>
+template<typename ValueType>
 struct Fibin {
-    template <typename T, typename U = ValueType, typename enable_if<!is_integral<U>::value, int>::type = 0>
+    template<typename T, typename U = ValueType, typename enable_if<!is_integral<U>::value, int>::type = 0>
     constexpr static void eval() {
         cout << "Fibin doesn't support: " << typeid(ValueType).name() << endl;
     }
 
-    template <typename T, typename U = ValueType, typename enable_if<is_integral<U>::value, int>::type = 0>
+    template<typename T, typename U = ValueType, typename enable_if<is_integral<U>::value, int>::type = 0>
     constexpr static ValueType eval() {
-        return  Expr<ValueType, T>::val;
-
-
+        return Expr<ValueType, T>::val;
     }
 };
 
@@ -186,8 +186,9 @@ constexpr static int hash_char(const char c) {
     return x;
 }
 
-constexpr static int Var(const char *str) {
-    int result = 0, pow = 1, x = -1;
+constexpr static unsigned long long Var(const char *str) {
+    unsigned long long result = 0, pow = 1;
+    int x = -1;
 
     for (int i = 0; str[i] != '\0'; i++) {
         x = hash_char(str[i]);
