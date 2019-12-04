@@ -4,8 +4,12 @@
 #include <iostream>
 #include <type_traits>
 #include <typeinfo>
+#include <cmath>
 
 using namespace std;
+
+const int max_id_len = 6;
+const int hash_const = 37;
 
 struct True;
 struct False;
@@ -23,7 +27,7 @@ template <int N, typename Value, typename Expresion>
 struct Let;
 
 template <int N>
-struct Var;
+struct Id;
 
 template <int N>
 struct Ref;
@@ -56,12 +60,12 @@ template <int N, typename ...Env>
 struct FindInEnv;
 
 template<int N, typename Value, typename ...Env>
-struct FindInEnv<N, Var<N>, Value, Env...> {
+struct FindInEnv<N, Id<N>, Value, Env...> {
     using found = Value;
 };
 
 template<int N, int M,  typename Value, typename ...Env>
-struct FindInEnv<N, Var<M>, Value, Env...> {
+struct FindInEnv<N, Id<M>, Value, Env...> {
     using found = typename FindInEnv<N, Env...>::found;
 };
 
@@ -73,7 +77,7 @@ struct Expr<ValueType, Invoke<Ref<N>, Value>, Env...> {
 
 template<typename ValueType, int N, typename Body, typename Value, typename ...Env>
 struct Expr<ValueType, Invoke<Lambda<N, Body>, Value> ,Env...> {
-    constexpr static ValueType val = Expr<ValueType, Body, Var<N>, Value, Env...>::val;
+    constexpr static ValueType val = Expr<ValueType, Body, Id<N>, Value, Env...>::val;
 };
 
 template<typename ValueType, typename Expression, typename Dismiss, typename ...Env>
@@ -98,7 +102,7 @@ struct Expr<ValueType, Eq<Expr_1, Expr_2>, Env...>{
 
 template<typename ValueType, typename Value, int N, typename Expression, typename ...Env>
 struct Expr<ValueType, Let<N, Value, Expression>, Env...> {
-    constexpr static ValueType val = Expr<ValueType, Expression, Var<N>, Value, Env...>::val;
+    constexpr static ValueType val = Expr<ValueType, Expression, Id<N>, Value, Env...>::val;
 };
 
 template<typename ValueType, int N, typename ...Env>
@@ -160,8 +164,41 @@ struct Fibin {
     template <typename T, typename U = ValueType, typename enable_if<is_integral<U>::value, int>::type = 0>
     constexpr static ValueType eval() {
         return  Expr<ValueType, T>::val;
+
+
     }
 };
+
+constexpr static int hash_char(const char c) {
+    char x = c;
+    if (x >= 'A' && x <= 'Z') {
+        x -= 'A' + 1;
+    } else if (x >= 'a' && x <= 'z') {
+        x -= 'a' + 1;
+    } else if (x >= '0' && x <= '9') {
+        x -= '0';
+        x += ('z' - 'a') + 1;
+    } else {
+        x = -1;
+    }
+
+    return x;
+}
+
+constexpr static int Var(const char *str) {
+    int result = 0;
+    char c = ' ';
+
+    for (int i = 0; str[i] != '\0'; i++) {
+        c = hash_char(str[i]);
+        if (c == -1 || i >= max_id_len) {
+            return -1;
+        }
+        result += hash_char(str[i]) * pow(hash_const, i);
+    }
+
+    return result;
+}
 
 
 #endif /* JNP1_4_FIBIN_H */
