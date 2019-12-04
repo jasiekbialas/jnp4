@@ -172,12 +172,12 @@ struct Fibin {
 constexpr static int hash_char(const char c) {
     char x = c;
     if (x >= 'A' && x <= 'Z') {
-        x -= 'A' + 1;
+        x -= 'A' -1;
     } else if (x >= 'a' && x <= 'z') {
-        x -= 'a' + 1;
+        x -= 'a' -1;
     } else if (x >= '0' && x <= '9') {
         x -= '0';
-        x += ('z' - 'a') + 1;
+        x += ('z' - 'a') -1;
     } else {
         x = -1;
     }
