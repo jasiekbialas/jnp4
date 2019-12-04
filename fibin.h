@@ -19,7 +19,7 @@ struct Lit;
 template<typename ... Args>
 struct Sum;
 
-template <typename Var, typename Val, typename Ex>
+template <typename Variable, typename Value, typename Expresion>
 struct Let;
 
 template <int n>
@@ -55,9 +55,28 @@ struct Eq;
 template<typename VT, typename T, typename ...R>
 struct Expr;
 
-template<typename VT, typename A, int n, typename B, typename ...R>
-struct Expr<VT, Invoke<Lambda<Var<n>, A>, B> ,R...> {
-    constexpr static VT val = Expr<VT, A, Var<n>, B, R...>::val;
+template <typename A, typename ...Env>
+struct FindInEnv;
+
+template<int n, typename Function, typename ...Env>
+struct FindInEnv<Var<n>, Var<n>, Function, Env...> {
+    using found = Function;
+};
+
+template<int n, int m,  typename Function, typename ...Env>
+struct FindInEnv<Var<n>, Var<m>, Function, Env...> {
+    using found = typename FindInEnv<Var<n>, Env...>::found;
+};
+
+template<typename VT, int n, typename Value, typename ...Env>
+struct Expr<VT, Invoke<Ref<Var<n>>, Value>, Env...> {
+    using function = typename FindInEnv<Var<n>, Env...>::found;
+    constexpr static VT val = Expr<VT, Invoke<function, Value>, Env...>::val;
+};
+
+template<typename VT, int n, typename Body, typename Value, typename ...R>
+struct Expr<VT, Invoke<Lambda<Var<n>, Body>, Value> ,R...> {
+    constexpr static VT val = Expr<VT, Body, Var<n>, Value, R...>::val;
 };
 
 template<typename VT, typename B, typename C, typename ...R>
@@ -80,14 +99,16 @@ struct Expr<VT, Eq<A, B>, R...>{
     constexpr static bool val = Expr<VT, A, R...>::val == Expr<VT, B, R...>::val;
 };
 
-template<typename VT, typename T, int n, typename V, typename ...R>
-struct Expr<VT, Let<Var<n>,  T, V>, R...> {
-    constexpr static VT val = Expr<VT, V, Var<n>, T, R...>::val;
+template<typename VT, typename Value, int n, typename Expression, typename ...R>
+struct Expr<VT, Let<Var<n>, Value, Expression>, R...> {
+    constexpr static VT val = Expr<VT, Expression, Var<n>, Value, R...>::val;
 };
 
-template<typename VT, typename T, int n, typename ...R>
-struct Expr <VT, Ref<Var<n>>, Var<n>, T, R... >{
-    constexpr static VT val = Expr<VT, T>::val;
+template<typename VT, int n, typename ...Env>
+struct Expr <VT, Ref<Var<n>>, Env... >{
+
+    using expr = typename FindInEnv<Var<n>, Env...>::found;
+    constexpr static VT val = Expr<VT, expr, Env...>::val;
 };
 
 template <typename VT, typename ...R>
@@ -101,12 +122,12 @@ struct Expr<VT, Lit<False>, R...> {
 };
 
 template<typename VT, typename ...R>
-struct Expr<VT, Lit<Fib<1>>, R...> {
-    constexpr static VT val = 1;
+struct Expr<VT, Lit<Fib<0>>, R...> {
+    constexpr static VT val = 0;
 };
 
 template<typename VT, typename ...R>
-struct Expr<VT, Lit<Fib<2>>, R...> {
+struct Expr<VT, Lit<Fib<1>>, R...> {
     constexpr static VT val = 1;
 };
 
