@@ -187,7 +187,7 @@ constexpr static int hash_char(const char c) {
 }
 
 constexpr static int Var(const char *str) {
-    int result = 0, temp = 0;
+    int result = 0;
     int pow = 1;
     char c = ' ';
 
@@ -196,7 +196,7 @@ constexpr static int Var(const char *str) {
         if (c == -1 || i >= max_id_len) {
             return -1;
         }
-        temp += hash_char(str[i]) * pow;
+        result += hash_char(str[i]) * pow;
         pow *= hash_const;
     }
 
