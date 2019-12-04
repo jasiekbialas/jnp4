@@ -19,17 +19,14 @@ struct Lit;
 template<typename ... Args>
 struct Sum;
 
-template <typename Variable, typename Value, typename Expresion>
+template <int N, typename Value, typename Expresion>
 struct Let;
 
-template <int n>
+template <int N>
 struct Var;
 
-template <typename T>
+template <int N>
 struct Ref;
-
-template <int n>
-struct Ref<Var<n>>;
 
 template <typename T>
 struct Inc1;
@@ -37,132 +34,132 @@ struct Inc1;
 template <typename T>
 struct Inc10;
 
-template <typename A, typename B>
+template <int N, typename Body>
 struct Lambda;
 
-template <typename A, typename B>
+template <typename Function, typename Parameter>
 struct Invoke;
 
-template<typename A, typename B, typename C>
+template<typename Condition, typename Expression_1, typename Expression_2>
 struct If;
 
-template<bool b, typename B, typename C>
+template<bool truth_value, typename Expression_1, typename Expression_2>
 struct Choose;
 
-template<typename A, typename B>
+template<typename Expression_1, typename Expression_2>
 struct Eq;
 
-template<typename VT, typename T, typename ...R>
+template<typename ValueType, typename Expression, typename ...Env>
 struct Expr;
 
-template <typename A, typename ...Env>
+template <int N, typename ...Env>
 struct FindInEnv;
 
-template<int n, typename Function, typename ...Env>
-struct FindInEnv<Var<n>, Var<n>, Function, Env...> {
-    using found = Function;
+template<int N, typename Value, typename ...Env>
+struct FindInEnv<N, Var<N>, Value, Env...> {
+    using found = Value;
 };
 
-template<int n, int m,  typename Function, typename ...Env>
-struct FindInEnv<Var<n>, Var<m>, Function, Env...> {
-    using found = typename FindInEnv<Var<n>, Env...>::found;
+template<int N, int M,  typename Value, typename ...Env>
+struct FindInEnv<N, Var<M>, Value, Env...> {
+    using found = typename FindInEnv<N, Env...>::found;
 };
 
-template<typename VT, int n, typename Value, typename ...Env>
-struct Expr<VT, Invoke<Ref<Var<n>>, Value>, Env...> {
-    using function = typename FindInEnv<Var<n>, Env...>::found;
-    constexpr static VT val = Expr<VT, Invoke<function, Value>, Env...>::val;
+template<typename ValueType, int N, typename Value, typename ...Env>
+struct Expr<ValueType, Invoke<Ref<N>, Value>, Env...> {
+    using function = typename FindInEnv<N, Env...>::found;
+    constexpr static ValueType val = Expr<ValueType, Invoke<function, Value>, Env...>::val;
 };
 
-template<typename VT, int n, typename Body, typename Value, typename ...R>
-struct Expr<VT, Invoke<Lambda<Var<n>, Body>, Value> ,R...> {
-    constexpr static VT val = Expr<VT, Body, Var<n>, Value, R...>::val;
+template<typename ValueType, int N, typename Body, typename Value, typename ...Env>
+struct Expr<ValueType, Invoke<Lambda<N, Body>, Value> ,Env...> {
+    constexpr static ValueType val = Expr<ValueType, Body, Var<N>, Value, Env...>::val;
 };
 
-template<typename VT, typename B, typename C, typename ...R>
-struct Expr<VT, Choose<true, B, C>, R...> {
-    constexpr static VT val = Expr<VT, B, R...>::val;
+template<typename ValueType, typename Expression, typename Dismiss, typename ...Env>
+struct Expr<ValueType, Choose<true, Expression, Dismiss>, Env...> {
+    constexpr static ValueType val = Expr<ValueType, Expression, Env...>::val;
 };
 
-template<typename VT, typename B, typename C, typename ...R>
-struct Expr<VT, Choose<false, B, C>, R...> {
-    constexpr static VT val = Expr<VT, C, R...>::val;
+template<typename ValueType, typename Dissmis, typename Expression, typename ...Env>
+struct Expr<ValueType, Choose<false, Dissmis, Expression>, Env...> {
+    constexpr static ValueType val = Expr<ValueType, Expression, Env...>::val;
 };
 
-template<typename VT, typename A, typename B, typename C, typename ...R>
-struct Expr<VT, If<A, B, C>, R...> {
-    constexpr static VT val = Expr<VT, Choose<Expr<VT, A, R...>::val, B, C>, R...>::val;
+template<typename ValueType, typename Condition, typename Expression_1, typename Expression_2, typename ...Env>
+struct Expr<ValueType, If<Condition, Expression_1, Expression_2>, Env...> {
+    constexpr static ValueType val = Expr<ValueType, Choose<Expr<ValueType, Condition, Env...>::val, Expression_1, Expression_2>, Env...>::val;
 };
 
-template<typename VT, typename A, typename B, typename ...R>
-struct Expr<VT, Eq<A, B>, R...>{
-    constexpr static bool val = Expr<VT, A, R...>::val == Expr<VT, B, R...>::val;
+template<typename ValueType, typename Expr_1, typename Expr_2, typename ...Env>
+struct Expr<ValueType, Eq<Expr_1, Expr_2>, Env...>{
+    constexpr static bool val = Expr<ValueType, Expr_1, Env...>::val == Expr<ValueType, Expr_2, Env...>::val;
 };
 
-template<typename VT, typename Value, int n, typename Expression, typename ...R>
-struct Expr<VT, Let<Var<n>, Value, Expression>, R...> {
-    constexpr static VT val = Expr<VT, Expression, Var<n>, Value, R...>::val;
+template<typename ValueType, typename Value, int N, typename Expression, typename ...Env>
+struct Expr<ValueType, Let<N, Value, Expression>, Env...> {
+    constexpr static ValueType val = Expr<ValueType, Expression, Var<N>, Value, Env...>::val;
 };
 
-template<typename VT, int n, typename ...Env>
-struct Expr <VT, Ref<Var<n>>, Env... >{
+template<typename ValueType, int N, typename ...Env>
+struct Expr <ValueType, Ref<N>, Env... >{
 
-    using expr = typename FindInEnv<Var<n>, Env...>::found;
-    constexpr static VT val = Expr<VT, expr, Env...>::val;
+    using expr = typename FindInEnv<N, Env...>::found;
+    constexpr static ValueType val = Expr<ValueType, expr, Env...>::val;
 };
 
-template <typename VT, typename ...R>
-struct Expr<VT, Lit<True>, R...> {
+template <typename ValueType, typename ...Env>
+struct Expr<ValueType, Lit<True>, Env...> {
     constexpr static bool val = true;
 };
 
-template <typename VT, typename ...R>
-struct Expr<VT, Lit<False>, R...> {
+template <typename ValueType, typename ...Env>
+struct Expr<ValueType, Lit<False>, Env...> {
     constexpr static bool val = false;
 };
 
-template<typename VT, typename ...R>
-struct Expr<VT, Lit<Fib<0>>, R...> {
-    constexpr static VT val = 0;
+template<typename ValueType, typename ...Env>
+struct Expr<ValueType, Lit<Fib<0>>, Env...> {
+    constexpr static ValueType val = 0;
 };
 
-template<typename VT, typename ...R>
-struct Expr<VT, Lit<Fib<1>>, R...> {
-    constexpr static VT val = 1;
+template<typename ValueType, typename ...Env>
+struct Expr<ValueType, Lit<Fib<1>>, Env...> {
+    constexpr static ValueType val = 1;
 };
 
-template<typename VT, int n, typename ...R>
-struct Expr<VT, Lit<Fib<n>>, R...> {
-    constexpr static VT val =
-            Expr<VT, Lit<Fib<n-1>>>::val +
-            Expr<VT, Lit<Fib<n-2>>>::val;
+template<typename ValueType, int n, typename ...Env>
+struct Expr<ValueType, Lit<Fib<n>>, Env...> {
+    constexpr static ValueType val =
+            Expr<ValueType, Lit<Fib<n-1>>>::val +
+            Expr<ValueType, Lit<Fib<n-2>>>::val;
 };
 
-template<typename VT, typename ... T, typename ...R>
-struct Expr<VT, Sum<T...>, R...>{
-    constexpr static VT val = (Expr<VT, T, R...>::val + ...);
+template<typename ValueType, typename ... T, typename ...Env>
+struct Expr<ValueType, Sum<T...>, Env...>{
+    constexpr static ValueType val = (Expr<ValueType, T, Env...>::val + ...);
 };
 
-template<typename VT, typename T, typename  ...R>
-struct Expr<VT, Inc1<T>, R...>{
-    constexpr static VT val = Expr<VT, T, R...>::val + Expr<VT, Lit<Fib<1>> >::val;
+template<typename ValueType, typename T, typename  ...Env>
+struct Expr<ValueType, Inc1<T>, Env...>{
+    constexpr static ValueType val = Expr<ValueType, T, Env...>::val + Expr<ValueType, Lit<Fib<1>> >::val;
 };
 
-template<typename VT, typename T, typename ...R>
-struct Expr<VT, Inc10<T>, R...>{
-    constexpr static VT val = Expr<VT, T, R...>::val + Expr<VT, Lit<Fib<10>>>::val;
+template<typename ValueType, typename T, typename ...Env>
+struct Expr<ValueType, Inc10<T>, Env...>{
+    constexpr static ValueType val = Expr<ValueType, T, Env...>::val + Expr<ValueType, Lit<Fib<10>>>::val;
 };
 
-template <class VT>
+template <class ValueType>
 struct Fibin {
-    template <typename T, typename U = VT, typename enable_if<!is_integral<U>::value, int>::type = 0>
+    template <typename T, typename U = ValueType, typename enable_if<!is_integral<U>::value, int>::type = 0>
     constexpr static void eval() {
-        cout << "Fibin doesn't support: " << typeid(VT).name() << endl;
+        cout << "Fibin doesn't support: " << typeid(ValueType).name() << endl;
     }
 
-    template <typename T, typename U = VT, typename enable_if<is_integral<U>::value, int>::type = 0>
-    constexpr static VT eval() {
-        return  Expr<VT, T>::val;
+    template <typename T, typename U = ValueType, typename enable_if<is_integral<U>::value, int>::type = 0>
+    constexpr static ValueType eval() {
+        return  Expr<ValueType, T>::val;
     }
 };
 
