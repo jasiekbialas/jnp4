@@ -173,6 +173,7 @@ private:
 
     template<typename T, int N, typename ... Env>
     struct Expr<T, Lit<Fib<N>>, Env ...> {
+        static_assert(N >= 0);
         constexpr static ValueType val =
                 Expr<T, Lit<Fib<N - 1>>>::val +
                 Expr<T, Lit<Fib<N - 2>>>::val;
@@ -180,6 +181,8 @@ private:
 
     template<typename T, typename ... U, typename ... Env>
     struct Expr<T, Sum<U ...>, Env ...> {
+        // muszą być co najmniej dwa argumenty
+        static_assert(sizeof ... (U) > 1);
         constexpr static ValueType val = (Expr<T, U, Env ...>::val + ...);
     };
 
