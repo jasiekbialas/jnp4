@@ -1,4 +1,5 @@
-#include "fibin.h"
+//#include "fibin.h"
+#include "fibin2.h"
 
 #include <iostream>
 
@@ -6,20 +7,36 @@ using namespace std;
 
 int main() {
 
-/*cout << Fib<19>::value() << endl;
-cout << Lit<Fib<10>>::value() << endl;
-cout << Lit<True>::value() << endl;
-cout << Lit<False>::value() << endl;
-cout << Inc1<Fib<19>>::value() << endl;
-cout << Inc1<Lit<False>>::value() << endl;
-cout << Inc10<Inc1<Lit<False>>>::value() << endl;
-cout << Eq<Lit<Fib<0>>, Lit<Fib<1>>>::value() << endl;*/
-cout << Fibin<int>::eval<Inc10<Inc1<Lit<Fib<10>>>>>() << endl;
-Fibin<const char*>::eval<Inc1<Lit<Fib<10>>>>();
+    static_assert(4 == Fibin<int>::eval<Inc1<Sum<Lit<Fib<1>>, Lit<Fib<2>>, Inc1<Lit<Fib<0>>>>>>());
+    static_assert(4181 == Fibin<int>::eval<Lit<Fib<19>>>());
+    static_assert(112 == Fibin<int>::eval<Inc10<Inc1<Inc1<Lit<Fib<10>>>>>>());
+    static_assert(61 == Fibin<uint8_t>::eval<Lit<Fib<17>>>());
+    static_assert(59 == Fibin<uint64_t>::eval<Invoke<Lambda<Var("x"), Sum<Ref<Var("x")>, Inc10<Lit<Fib<1>>>, Lit<Fib<2>>>>, Lit<Fib<3>>>>());
 
-static_assert(1 == Fibin<uint8_t>::eval<If<Lit<False>, Lit<Fib<0>>, Lit<Fib<1>>>>());
+    using Scoping =
+    Let<
+            Var("const"),
+            Lit<Fib<9>>,
+            Let<
+                    Var("f"),
+                    Lambda<
+                            Var("x"),
+                            Sum<
+                                    Ref<Var("const")>,
+                                    Ref<Var("x")>
+                            >
+                    >,
+                    Let<
+                            Var("const"),
+                            Lit<Fib<10>>,
+                            Invoke<
+                                    Ref<Var("f")>,
+                                    Lit<Fib<0>>
+                            >
+                    >
+            >
+    >;
+    static_assert(34 == Fibin<int>::eval<Scoping>());
+    static_assert(2 == Fibin<uint>::eval<Invoke<Let<Var("x"), Lit<Fib<1>>, Lambda<Var("x"), Ref<Var("x")> > >, Lit<Fib<3>> > >());
 
-static_assert(59 == Fibin<uint64_t>::eval<Invoke<Lambda<Var<1>,
-            Sum<Ref<Var<1>>, Inc10<Lit<Fib<1>>>, Lit<Fib<2>>>>, Lit<Fib<3>>>>());
-static_assert(1 == Fibin<int16_t>::eval<Let<Var<3>, Lit<Fib<0>>, Inc1<Ref<Var<3>>>>>());
 }
